@@ -25,11 +25,11 @@ interface HeatmapProps {
 }
 
 const ACTIVITY_LEVELS = [
-  { level: 0, label: 'No activity', bgClass: 'bg-slate-200 dark:bg-slate-800' },
-  { level: 1, label: '1 task', bgClass: 'bg-emerald-200 dark:bg-emerald-900' },
-  { level: 2, label: '2 tasks', bgClass: 'bg-emerald-300 dark:bg-emerald-700' },
-  { level: 3, label: '3+ tasks', bgClass: 'bg-emerald-400 dark:bg-emerald-500' },
-  { level: 4, label: 'Completed tasks', bgClass: 'bg-emerald-500 dark:bg-emerald-400' }
+  { level: 0, label: 'No activity', bgClass: 'bg-slate-200 dark:bg-slate-800', description: 'No tasks' },
+  { level: 1, label: '1 task', bgClass: 'bg-emerald-200 dark:bg-emerald-900', description: 'Light activity' },
+  { level: 2, label: '2 tasks', bgClass: 'bg-emerald-300 dark:bg-emerald-700', description: 'Moderate activity' },
+  { level: 3, label: '3+ tasks', bgClass: 'bg-emerald-400 dark:bg-emerald-500', description: 'High activity' },
+  { level: 4, label: 'Completed tasks', bgClass: 'bg-emerald-500 dark:bg-emerald-400', description: 'Perfect day' }
 ] as const
 
 export function Heatmap({ 
@@ -38,7 +38,8 @@ export function Heatmap({
   showTitle = true, 
   className = '' 
 }: HeatmapProps) {
-  const [tooltipData, setTooltipData] = useState<HeatmapData | null>(null)
+  const [hoveredData, setHoveredData] = useState<HeatmapData | null>(null)
+  const [isHovering, setIsHovering] = useState(false)
   
   const dateRange = useMemo(() => {
     const endDate = new Date()
@@ -54,6 +55,16 @@ export function Heatmap({
     })), [data]
   )
 
+  const stats = useMemo(() => {
+    const totalDays = data.filter(d => d.count > 0).length
+    const completedDays = data.filter(d => d.completed).length
+    const currentYear = new Date().getFullYear()
+    const thisYearData = data.filter(d => new Date(d.date).getFullYear() === currentYear)
+    const thisYearActive = thisYearData.filter(d => d.count > 0).length
+    
+    return { totalDays, completedDays, thisYearActive }
+  }, [data])
+
   const getClassForValue = useCallback((value: TransformedData | null): string => {
     if (!value || value.count === 0) {
       return 'color-github-0'
@@ -65,16 +76,16 @@ export function Heatmap({
     if (!value?.date) return ''
     
     const date = format(new Date(value.date), 'MMM d, yyyy')
+    const { count, original } = value
     
-    if (!value.count) {
+    if (!count) {
       return `No tasks on ${date}`
     }
     
-    const { count, original } = value
-    const taskText = count === 1 ? 'task' : 'tasks'
-    const completedText = original?.completed ? ' (Completed)' : ''
+    const taskText = original.count === 1 ? 'task' : 'tasks'
+    const completedText = original?.completed ? ' ✅ All completed!' : ''
     
-    return `${count} ${taskText}${completedText} on ${date}`
+    return `${original.count} ${taskText} on ${date}${completedText}`
   }, [])
 
   const handleDateClick = useCallback((value: TransformedData | null) => {
@@ -84,75 +95,118 @@ export function Heatmap({
   }, [onDateClick])
 
   const handleMouseOver = useCallback((event: React.MouseEvent, value: TransformedData | null) => {
-    setTooltipData(value?.original || null)
+    setHoveredData(value?.original || null)
+    setIsHovering(true)
   }, [])
 
   const handleMouseLeave = useCallback(() => {
-    setTooltipData(null)
+    setHoveredData(null)
+    setIsHovering(false)
   }, [])
 
   return (
     <div 
-      className={`w-full overflow-x-auto p-4 bg-card rounded-lg border ${className}`}
+      className={`w-full space-y-4 ${className}`}
       role="region" 
       aria-label="Task Activity Heatmap"
     >
       {showTitle && (
-        <div className="mb-4">
-          <h3 className="text-lg font-semibold text-foreground mb-2">
-            Activity Overview
-          </h3>
-          <p className="text-sm text-muted-foreground">
-            Your daily task completion over the past year
-          </p>
+        <div className="space-y-3">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+              <h3 className="text-lg font-semibold text-foreground">
+                Activity Overview
+              </h3>
+              <p className="text-sm text-muted-foreground">
+                Your daily task completion over the past year
+              </p>
+            </div>
+            
+            {/* Quick stats */}
+            <div className="flex items-center gap-4 text-xs text-muted-foreground">
+              <div className="flex items-center gap-1">
+                <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
+                <span>{stats.thisYearActive} active days</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <div className="w-2 h-2 bg-emerald-400 rounded-full"></div>
+                <span>{stats.completedDays} perfect days</span>
+              </div>
+            </div>
+          </div>
         </div>
       )}
       
       <TooltipProvider>
-        <div className="min-w-[750px] w-full">
-          <CalendarHeatmap
-            startDate={dateRange.startDate}
-            endDate={dateRange.endDate}
-            values={transformedData}
-            classForValue={getClassForValue}
-            titleForValue={getTitleForValue}
-            onClick={handleDateClick}
-            onMouseOver={handleMouseOver}
-            onMouseLeave={handleMouseLeave}
-            showWeekdayLabels={true}
-            showMonthLabels={true}
-            gutterSize={3}
-          />
+        <div className="relative">
+          {/* Heatmap container with enhanced styling */}
+          <div className="min-w-[750px] w-full p-4 bg-card/30 rounded-lg border border-border/50 overflow-x-auto">
+            <CalendarHeatmap
+              startDate={dateRange.startDate}
+              endDate={dateRange.endDate}
+              values={transformedData}
+              classForValue={getClassForValue}
+              titleForValue={getTitleForValue}
+              onClick={handleDateClick}
+              onMouseOver={handleMouseOver}
+              onMouseLeave={handleMouseLeave}
+              showWeekdayLabels={true}
+              showMonthLabels={true}
+              gutterSize={3}
+            />
+          </div>
+          
+          {/* Enhanced hover tooltip */}
+          {isHovering && hoveredData && (
+            <div className="absolute top-4 right-4 z-10 p-3 bg-popover border border-border rounded-lg shadow-lg animate-fade-in">
+              <div className="text-sm space-y-1">
+                <div className="font-medium">
+                  {format(new Date(hoveredData.date), 'EEEE, MMM d, yyyy')}
+                </div>
+                <div className="text-muted-foreground">
+                  {hoveredData.count === 0 ? 'No tasks' : 
+                   `${hoveredData.count} task${hoveredData.count !== 1 ? 's' : ''}`}
+                  {hoveredData.completed && hoveredData.count > 0 && (
+                    <span className="text-emerald-400 ml-1">✅ Completed</span>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </TooltipProvider>
       
-      <div className="flex items-center justify-between mt-4 text-xs text-muted-foreground">
-        <span>Less</span>
-        <div className="flex gap-1" role="legend" aria-label="Activity level legend">
-          {ACTIVITY_LEVELS.map(({ level, label, bgClass }) => (
-            <Tooltip key={level}>
-              <TooltipTrigger asChild>
-                <div 
-                  className={`w-3 h-3 rounded-sm cursor-help ${bgClass}`}
-                  role="presentation"
-                  aria-label={`Activity level ${level}: ${label}`}
-                />
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>{label}</p>
-              </TooltipContent>
-            </Tooltip>
-          ))}
+      {/* Enhanced legend */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pt-2">
+        <div className="flex items-center gap-4 text-xs text-muted-foreground">
+          <span>Less</span>
+          <div className="flex gap-1" role="legend" aria-label="Activity level legend">
+            {ACTIVITY_LEVELS.map(({ level, label, bgClass, description }) => (
+              <Tooltip key={level}>
+                <TooltipTrigger asChild>
+                  <div 
+                    className={`w-3 h-3 rounded-sm cursor-help transition-transform hover:scale-125 ${bgClass}`}
+                    role="presentation"
+                    aria-label={`Activity level ${level}: ${label}`}
+                  />
+                </TooltipTrigger>
+                <TooltipContent>
+                  <div className="text-center">
+                    <p className="font-medium">{label}</p>
+                    <p className="text-xs text-muted-foreground">{description}</p>
+                  </div>
+                </TooltipContent>
+              </Tooltip>
+            ))}
+          </div>
+          <span>More</span>
         </div>
-        <span>More</span>
+        
+        {/* Additional info */}
+        <div className="text-xs text-muted-foreground">
+          Click any day to view or add tasks
+        </div>
       </div>
-
-      {/* Optional: Display current tooltip data for debugging */}
-      {process.env.NODE_ENV === 'development' && tooltipData && (
-        <div className="mt-2 p-2 bg-muted rounded text-xs">
-          <strong>Debug:</strong> {JSON.stringify(tooltipData, null, 2)}
-        </div>
-      )}
     </div>
   )
-} 
+}

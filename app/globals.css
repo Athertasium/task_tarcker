@@ -48,7 +48,91 @@
   body {
     background-color: var(--color-background);
     color: var(--color-text);
+    font-feature-settings: "rlig" 1, "calt" 1;
   }
+  
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+/* Enhanced animations */
+@keyframes fadeIn {
+  from { 
+    opacity: 0; 
+    transform: translateY(20px); 
+  }
+  to { 
+    opacity: 1; 
+    transform: translateY(0); 
+  }
+}
+
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200px 0;
+  }
+  100% {
+    background-position: calc(200px + 100%) 0;
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.6s ease-out forwards;
+}
+
+.animate-slide-up {
+  animation: slideInUp 0.5s ease-out forwards;
+}
+
+.animate-scale-in {
+  animation: scaleIn 0.4s ease-out forwards;
+}
+
+.animate-pulse-subtle {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.shimmer {
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.1),
+    transparent
+  );
+  background-size: 200px 100%;
+  animation: shimmer 2s infinite;
 }
 
 /* Enhanced GitHub-style heatmap */
@@ -57,44 +141,182 @@
 }
 
 .react-calendar-heatmap .color-empty {
-  fill: #1e293b; /* slate-800 */
-  stroke: #f8fafc; /* changed from slate-700 to text color for better contrast */
+  fill: #1e293b;
+  stroke: #334155;
+  stroke-width: 1;
+  rx: 2;
 }
 
 .react-calendar-heatmap .color-github-0 {
-  @apply fill-slate-800;
+  fill: #1e293b;
+  stroke: #334155;
+  stroke-width: 1;
+  rx: 2;
 }
 
 .react-calendar-heatmap .color-github-1 {
-  @apply fill-emerald-900;
+  fill: #064e3b;
+  stroke: #065f46;
+  stroke-width: 1;
+  rx: 2;
 }
 
 .react-calendar-heatmap .color-github-2 {
-  @apply fill-emerald-700;
+  fill: #047857;
+  stroke: #059669;
+  stroke-width: 1;
+  rx: 2;
 }
 
 .react-calendar-heatmap .color-github-3 {
-  @apply fill-emerald-500;
+  fill: #10b981;
+  stroke: #34d399;
+  stroke-width: 1;
+  rx: 2;
 }
 
 .react-calendar-heatmap .color-github-4 {
-  @apply fill-emerald-400;
+  fill: #34d399;
+  stroke: #6ee7b7;
+  stroke-width: 1;
+  rx: 2;
+  filter: drop-shadow(0 0 4px rgba(52, 211, 153, 0.4));
 }
 
 .react-calendar-heatmap rect:hover {
-  stroke: #94a3b8; /* slate-400 */
+  stroke: #94a3b8;
   stroke-width: 2;
+  filter: brightness(1.2);
+  transform: scale(1.1);
+  transform-origin: center;
 }
 
 .react-calendar-heatmap rect {
-  transition: stroke 0.2s ease-in-out;
+  transition: all 0.2s ease-in-out;
+  cursor: pointer;
 }
 
-@keyframes tt-fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
 }
 
-.tt-animate-fade-in {
-  animation: tt-fadeIn 0.3s ease-out;
+::-webkit-scrollbar-track {
+  background: #1e293b;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #475569;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #64748b;
+}
+
+/* Glass morphism effect */
+.glass {
+  background: rgba(30, 41, 59, 0.8);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(148, 163, 184, 0.1);
+}
+
+/* Gradient backgrounds */
+.gradient-bg {
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+}
+
+.gradient-border {
+  background: linear-gradient(135deg, #8b5cf6, #06b6d4, #10b981);
+  padding: 1px;
+  border-radius: 12px;
+}
+
+.gradient-border-inner {
+  background: #1e293b;
+  border-radius: 11px;
+  width: 100%;
+  height: 100%;
+}
+
+/* Enhanced focus states */
+.focus-ring {
+  @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background;
+}
+
+/* Loading states */
+.loading-skeleton {
+  background: linear-gradient(
+    90deg,
+    #1e293b 25%,
+    #334155 50%,
+    #1e293b 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite;
+}
+
+/* Improved button hover effects */
+.btn-hover-lift {
+  transition: all 0.2s ease-in-out;
+}
+
+.btn-hover-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+}
+
+/* Task completion celebration */
+@keyframes celebrate {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.2); }
+  100% { transform: scale(1); }
+}
+
+.celebrate {
+  animation: celebrate 0.3s ease-in-out;
+}
+
+/* Responsive text scaling */
+@media (max-width: 640px) {
+  .text-responsive-xl {
+    font-size: 1.5rem;
+    line-height: 2rem;
+  }
+}
+
+@media (min-width: 641px) {
+  .text-responsive-xl {
+    font-size: 2.25rem;
+    line-height: 2.5rem;
+  }
+}
+
+/* Enhanced card shadows */
+.card-shadow {
+  box-shadow: 
+    0 1px 3px rgba(0, 0, 0, 0.12),
+    0 1px 2px rgba(0, 0, 0, 0.24),
+    0 0 0 1px rgba(148, 163, 184, 0.05);
+}
+
+.card-shadow-hover {
+  box-shadow: 
+    0 4px 6px rgba(0, 0, 0, 0.07),
+    0 10px 15px rgba(0, 0, 0, 0.1),
+    0 0 0 1px rgba(148, 163, 184, 0.1);
+}
+
+/* Progress indicators */
+.progress-ring {
+  transform: rotate(-90deg);
+  transform-origin: 50% 50%;
+}
+
+.progress-ring-circle {
+  transition: stroke-dashoffset 0.35s;
+  transform: rotate(-90deg);
+  transform-origin: 50% 50%;
 }
